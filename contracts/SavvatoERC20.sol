@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /**
    * @title SavvatoERC20
-   * @dev SavvatoERC20 Description
+   * @dev Keeps a register of tokens to public addresses, and will send eth to that address when the address calls cashOut().
    * @custom:dev-run-script .
    */
 contract SavvatoERC20 is ERC20 {
@@ -22,7 +22,7 @@ contract SavvatoERC20 is ERC20 {
 
     receive() external payable { }
 
-    function increaseBalance(address spender, uint256 amount) public returns(bool sufficient) {
+    function increaseBalance(address spender, uint256 amount) public returns(bool successful) {
         if (deployingAddress == payable(msg.sender)) {
             _mint(spender, amount);
             emit memberBalanceChanged(spender, balanceOf(spender));
@@ -31,33 +31,19 @@ contract SavvatoERC20 is ERC20 {
         return true;
     }
 
-    function pot() public view returns(uint256) {
-        return address(this).balance;
-    }
-
-    function portion(uint256 cashOutAmount) public view returns(uint256) {
-        uint256 totalEthInThePot = address(this).balance;
-        uint256 totalSupply = totalSupply();
-        uint256 p = totalEthInThePot * (cashOutAmount / totalSupply);
-        return p;
-    }
-
-    function cashOut(uint256 cashOutAmount) public payable returns(bool sufficient) {
+    function cashOut(uint256 cashOutAmount) public payable returns(bool successful) {
         address payable destAddress = payable(msg.sender);
 
-        uint256 totalEthInThePot = address(this).balance * 1.0;
-        uint256 halfThePot = address(this).balance / 2;
-        uint256 totalSupply = totalSupply();
-        uint256 p = address(this).balance * (cashOutAmount / totalSupply);
+        if (balanceOf(destAddress) >= cashOutAmount) {
+            (bool success, ) = destAddress.call{value: (address(this).balance * cashOutAmount) / totalSupply()}("");
+            require(success, "Failed to send Ether");
 
-        _burn(destAddress, cashOutAmount);
+            _burn(destAddress, cashOutAmount);
 
-//        (bool success, ) = destAddress.call{value: p}("");
-  //      require(success, "Failed to send Ether");
+            return true;
+        }
 
-        destAddress.transfer(p);
-
-        return true;
+        return false;
     }
 
 }
