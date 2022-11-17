@@ -1,0 +1,24 @@
+truffle develop     -- starts the blockchain
+truffle deploy
+truffle console     -- interact with the contracts
+
+// set addresses to use in testing
+web3.eth.getAccounts().then(arr => { aa = arr[2]; bb = arr[3]; })
+
+// set default web3 account
+web3.eth.getAccounts().then(arr => web3.eth.defaultAccount = arr[0])
+
+// increase the token balance of an account
+SavvatoERC20.deployed().then(i => i.increaseBalance(aa, 5, {from: web3.eth.defaultAccount}))
+
+// get token balance of an account
+SavvatoERC20.deployed().then(i => i.balanceOf(aa, {from: web3.eth.defaultAccount}))
+
+// send eth from default account to SavvatoERC20 contract
+web3.eth.sendTransaction({to: SavvatoERC20.address, value: web3.utils.toWei("0.7", "ether")})
+
+// get eth balance for SavvatoERC20 contract
+web3.eth.getBalance(SavvatoERC20.address)
+
+// execute a cash out call to get the corresponding eth value
+SavvatoERC20.deployed().then(i => i.cashOut(7, {from: aa}))
