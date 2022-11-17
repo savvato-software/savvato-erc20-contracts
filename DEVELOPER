@@ -22,3 +22,14 @@ web3.eth.getBalance(SavvatoERC20.address)
 
 // execute a cash out call to get the corresponding eth value
 SavvatoERC20.deployed().then(i => i.cashOut(7, {from: aa}))
+
+// verify contract's eth purse
+web3.eth.getBalance(SavvatoERC20.address)
+
+// verify aa's eth purse
+web3.eth.getBalance(aa)
+
+// verify contract token count for aa
+SavvatoERC20.deployed().then(i => i.balanceOf(aa, {from: web3.eth.defaultAccount}))
+
+
