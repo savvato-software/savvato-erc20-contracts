@@ -13,14 +13,29 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract SavvatoERC20 is ERC20 {
 
     address payable public deployingAddress;
+    string public gitCommitHash;
 
     event memberBalanceChanged(address indexed addr, uint256 newAmount);
+    event mostRecentGitCommitHashChanged(string newHash);
 
     constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) payable  {
         deployingAddress = payable(msg.sender);
     }
 
     receive() external payable { }
+
+    function setMostRecentGitCommitHash(string memory hash) public returns(bool successful) {
+        if (deployingAddress == payable(msg.sender)) {
+            gitCommitHash = hash;
+            emit mostRecentGitCommitHashChanged(gitCommitHash);
+        }
+
+        return true;
+    }
+
+    function getMostRecentGitCommitHash() public view returns(string memory hash) {
+        return gitCommitHash;
+    }
 
     function increaseBalance(address spender, uint256 amount) public returns(bool successful) {
         if (deployingAddress == payable(msg.sender)) {
@@ -39,6 +54,8 @@ contract SavvatoERC20 is ERC20 {
             require(success, "Failed to send Ether");
 
             _burn(destAddress, cashOutAmount);
+
+            emit memberBalanceChanged(msg.sender, balanceOf(msg.sender));
 
             return true;
         }
